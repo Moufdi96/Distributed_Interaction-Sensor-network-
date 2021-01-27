@@ -8,7 +8,7 @@ from clientTCP import TCPClient
 
 AGGREGATOR_REQUESTS = ['TURN_OFF','TURN_ON','SET_RATE']
 
-class Sensor(TCPClient) : 
+class VirtualSensor(TCPClient) : 
     def __init__(self,sensor_id,sensor_type,sensor_rate,geolocalisation):
         TCPClient.__init__(self)
         self.sensor_id = sensor_id
