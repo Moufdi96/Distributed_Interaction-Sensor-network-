@@ -1,0 +1,1 @@
+{"sensor1": {"type": "Photometer", "rate": 0.25, "unit": "lux", "geolocalisation": "localisation", "json_file_path": "/home/moufdi/GitHubProjects/Projet_interaction_distribuee/sensor1.json"}}

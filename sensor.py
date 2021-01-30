@@ -5,28 +5,45 @@ import time
 import os
 from random import uniform
 from clientTCP import TCPClient
+import json
 
 AGGREGATOR_REQUESTS = ['TURN_OFF','TURN_ON','SET_RATE']
 
 class VirtualSensor(TCPClient) : 
-    def __init__(self,sensor_id,sensor_type,sensor_rate,geolocalisation):
+    def __init__(self,sensor_id,sensor_type,sensor_rate,measurement_unit,geolocalisation):
         TCPClient.__init__(self)
         self.sensor_id = sensor_id
         self.sensor_type =sensor_type
         self.sensor_rate = sensor_rate # rate (Hz)
+        self.measurement_unit = measurement_unit
         self.transmission_state = False
         self.geolocalisation = geolocalisation
-        self.thread_client1 = threading.Thread(target=self.connectToServer,args=['localhost',2500])
+        self.thread_client1 = threading.Thread(target=self.connectToServer,args=['localhost',3100])
         self.thread_send1 = threading.Thread(target=self.send)
         self.thread_receive1 = threading.Thread(target=self.receive)
         
     def send(self):
+        sensor_info = json.dumps({'id':self.sensor_id,'type':self.sensor_type,'rate':self.sensor_rate,'unit':self.measurement_unit,'geolocalisation':self.geolocalisation})
+        while True:
+            if self.isConnected() == 0 and self.isDisconnected() == False:
+                
+                try:
+                    self.sock.sendall(sensor_info.encode())
+                    print('hhhhhhhh')
+                    break
+                except:
+                    pass
+            else:
+                continue
+
         while True :
             self.data =''
             if self.isConnected() == 0 and self.isDisconnected() == False:
                 try:
                 # Send data
-                    data = str(SensorClient.dataAcquisition())
+                    value = str(VirtualSensor.dataAcquisition())
+                    data = [self.sensor_id,value]
+                    data = json.dumps(data)
                     print('sending {!r} to {}'.format(data,self.port))
                     self.sock.sendall(data.encode())
                     
@@ -73,9 +90,20 @@ class VirtualSensor(TCPClient) :
     
     def getGeolocalisation(self):
         return self.geolocalisation 
-
+    
+    def start_threads(self):
+        self.thread_client1.start()
+        #self.thread_receive1.start()
+        self.thread_send1.start()
 
     @staticmethod
     def dataAcquisition():
         data = uniform(-10000,10000)
         return data
+
+sensor1 = VirtualSensor('sensor1','Photometer',0.25,'lux','localisation')
+sensor2 = VirtualSensor('sensor2','Thermommter',0.3,'C°','localisation')
+#sensor3 = VirtualSensor('sensor3','Baromètre',0.4,'bar','localisation')
+sensor1.start_threads()
+sensor2.start_threads()
+#sensor3.start_threads()
