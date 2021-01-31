@@ -7,7 +7,7 @@ from random import uniform
 from clientTCP import TCPClient
 import json
 
-AGGREGATOR_REQUESTS = ['TURN_OFF','TURN_ON','SET_RATE']
+REQUESTS_FROM_AGGREGATOR = ['TURN_OFF','TURN_ON','SET_RATE']
 
 class VirtualSensor(TCPClient) : 
     def __init__(self,sensor_id,sensor_type,sensor_rate,measurement_unit,geolocalisation):
@@ -29,7 +29,6 @@ class VirtualSensor(TCPClient) :
                 
                 try:
                     self.sock.sendall(sensor_info.encode())
-                    print('hhhhhhhh')
                     break
                 except:
                     pass
@@ -53,21 +52,23 @@ class VirtualSensor(TCPClient) :
 
     def receive(self):
         while True:
+            print("hellooooo")
             if self.isConnected() == 0 and self.isDisconnected() == False:
                 self.data = self.sock.recv(16).decode("utf-8")
-                if(self.data != '' and self.data in AGGREGATOR_REQUESTS):
-                    if self.data == AGGREGATOR_REQUESTS[0]:
+                print(self.data)
+                if(self.data != '' and self.data in REQUESTS_FROM_AGGREGATOR):
+                    if self.data == REQUESTS_FROM_AGGREGATOR[0]:
                         print('received turn off request from aggreagator {}'.format(self.port))
                         print('Turnning off sensor')
                         self.turn_off_sensor()
-                    elif self.data == AGGREGATOR_REQUESTS[1]:
+                    elif self.data == REQUESTS_FROM_AGGREGATOR[1]:
                         print('received turn on request from aggreagator {}'.format(self.port))
                         print('Turnning on sensor')
                         self.turn_on_sensor()
-                    elif self.data[0:len(AGGREGATOR_REQUESTS)] == AGGREGATOR_REQUESTS[2]:
+                    elif self.data[0:len(REQUESTS_FROM_AGGREGATOR)] == REQUESTS_FROM_AGGREGATOR[2]:
                         print('received rate setting request from aggreagator {}'.format(self.port))
                         print('Turnning off sensor')
-                        rate = float(self.data[len(AGGREGATOR_REQUESTS):])
+                        rate = float(self.data[len(REQUESTS_FROM_AGGREGATOR):])
                         self.setRate(rate)    
 
     def start_timer(self):
@@ -95,15 +96,16 @@ class VirtualSensor(TCPClient) :
         self.thread_client1.start()
         #self.thread_receive1.start()
         self.thread_send1.start()
+        #self.thread_receive1.start()
 
     @staticmethod
     def dataAcquisition():
         data = uniform(-10000,10000)
         return data
 
-sensor1 = VirtualSensor('sensor1','Photometer',0.25,'lux','localisation')
-sensor2 = VirtualSensor('sensor2','Thermommter',0.3,'C°','localisation')
-#sensor3 = VirtualSensor('sensor3','Baromètre',0.4,'bar','localisation')
+sensor1 = VirtualSensor('sensor1','Humidity',0.25,'lux','localisation')
+sensor2 = VirtualSensor('sensor2','Thermometer',0.3,'C°','localisation')
+#sensor3 = VirtualSensor('sensor3','Barometer',0.4,'bar','localisation')
 sensor1.start_threads()
 sensor2.start_threads()
 #sensor3.start_threads()

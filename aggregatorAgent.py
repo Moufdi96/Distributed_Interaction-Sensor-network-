@@ -5,7 +5,11 @@ from datetime import datetime
 import socket
 import threading
 import json
+import time
 from stableMemory import loadJsonFile, saveData
+
+REQUESTS_TO_SENSOR = ['TURN_OFF','TURN_ON','SET_RATE']
+
 class AggregatorAgent(ServerTCP):
     def __init__(self,id):
         ServerTCP.__init__(self)
@@ -14,9 +18,11 @@ class AggregatorAgent(ServerTCP):
         self.sensors_list = loadJsonFile(self.path_sensor_metaData)
         self.client = TCPClient() # to communicate with the server
         self.sensor_data = {}
-        #self.sonsor_threads = {}
-
-    def startServer(self, IP, port, receiveFunc):      
+        self.connection_to_server = self.ConnectionToServer(self.aggregator_id,self.sensors_list)
+        self.sendToServer_thread = None
+        self.receptionFromSensor_thread = None
+    
+    def receptionFromSensor(self, IP, port, receiveFunc):      
         # Bind the socket to the port
         #os.system('fuser -k '+ str(port)+'/tcp')
         self.server_address = (IP, port)
@@ -29,8 +35,8 @@ class AggregatorAgent(ServerTCP):
         print('waiting for a connection')
         while True:
             #connection, client_address = self.sock.accept()
-            serverThread = threading.Thread(target=receiveFunc,args=self.sock.accept())
-            serverThread.start()
+            receptionFromSensorThread = threading.Thread(target=receiveFunc,args=self.sock.accept())
+            receptionFromSensorThread.start()
         
     def receive(self,connection,client_address):
         try:
@@ -50,6 +56,7 @@ class AggregatorAgent(ServerTCP):
                     id = sensor_info['id']
                     sensor_info = self.add_new_sensor(sensor_info)
                     self.sensor_data[id] = loadJsonFile('/home/moufdi/GitHubProjects/Projet_interaction_distribuee/' + str(id) + '.json')
+                    print(self.sensor_data)
                     break
 
             while True:
@@ -72,6 +79,7 @@ class AggregatorAgent(ServerTCP):
 
                 #print(type(data))
                 if(value.__class__ == float or value.__class__ == int):
+                    #self.sendRequestToSensor(REQUESTS_TO_SENSOR[0],id)
                     print('\n')
                     print('------------------------Received from Sensor-----------------------')
                     print('received from {} : {}'.format(client_address,data))
@@ -106,25 +114,71 @@ class AggregatorAgent(ServerTCP):
         return sensor_info
         #self.sonsor_threads[id] = threading.Thread(target=self.sendRequestToSensor)
 
-    def sendRequestToSensor(self):
-        pass
+
+    def sendRequestToSensor(self, request, sensor_id,*args):
+        if request in REQUESTS_TO_SENSOR:
+            if request == REQUESTS_TO_SENSOR[0]:
+                print('Sending turn off request to {}'.format(sensor_id))
+                print('Turnning off {}'.format(sensor_id))
+                self.sock.sendall(request.encode())
+            elif request == REQUESTS_TO_SENSOR[1]:
+                print('Sending turn on request to {}'.format(sensor_id))
+                print('Turnning on {}'.format(sensor_id))
+                #TODO
+            elif request == REQUESTS_TO_SENSOR[2]:
+                print('Sending rate setting request to {}'.format(sensor_id))
+                print('Resetting {} rate'.format(sensor_id))
+                #TODO     
+    
+    def sendDataToServer(self):
+        while(True):
+            last_received_data = [self.aggregator_id,self.get_last_received_data()]
+            self.connection_to_server.send(last_received_data)
+            self.start_timer(5) # send last received data to the server each minute
+    
+    def startTransmissionToServer(self):
+        self.connection_to_server.thread_client.start()
+        self.sendToServer_thread = threading.Thread(target=self.sendDataToServer)
+        self.sendToServer_thread.start() 
+
     class ConnectionToServer(TCPClient):
         SERVER_REQUESTS = ['TURN_OFF','TURN_ON','SET_RATE']
-        def __init__(self):
-            pass
+        def __init__(self,agregator_id,agreg_sensor_list):
+            TCPClient.__init__(self)
+            self.agregator_id = agregator_id
+            self.agreg_sensor_list = agreg_sensor_list
+            self.thread_client = threading.Thread(target=self.connectToServer,args=['localhost',2500])
 
+        def send(self,last_received_data):
+            if self.isConnected() == 0 and self.isDisconnected() == False:
+                print('--------------- {}'.format(last_received_data))
+                try:
+                    last_received_data = json.dumps(last_received_data)
+                    print('sending {!r} to {}'.format(last_received_data,self.port))
+                    self.sock.sendall(last_received_data.encode())
+                except:
+                    pass
         def receive(self):
             pass
 
-        def send(self):
-            pass
+        def startThreads(self):
+            self.thread_client.start()
+        
+    def start_timer(self,t):
+        time.sleep(t)
 
-#from sensor import VirtualSensor
+    def get_last_received_data(self):
+        last_received_data = {}
+        sensors = list(self.sensor_data.keys())
+        for s in sensors:
+            last_received_data[s] = self.sensor_data[s][-1]
+        return last_received_data
+    
+    def startAgregatorReception(self, IP, port, receiveFunc):
+        self.receptionFromSensor_thread = threading.Thread(target=self.receptionFromSensor,args=[IP, port, receiveFunc])
+        self.receptionFromSensor_thread.start()
+
 agg = AggregatorAgent('agg1')
-agg.startServer('localhost',3100,agg.receive)
-#sensor1 = VirtualSensor('sensor1','Photometer',0.25,'lux','localisation')
-#sensor2 = VirtualSensor('sensor2','Thermommter',0.3,'C°','localisation')
-##sensor3 = VirtualSensor('sensor3','Baromètre',0.4,'bar','localisation')
-#sensor1.start_threads()
-#sensor2.start_threads()
-#sensor3.start_threads()
+agg.startAgregatorReception('localhost',3100,agg.receive)
+agg.startTransmissionToServer()
+
