@@ -56,11 +56,10 @@ class AggregatorAgent(ServerTCP):
                     id = sensor_info['id']
                     sensor_info = self.add_new_sensor(sensor_info)
                     self.sensor_data[id] = loadJsonFile('/home/moufdi/GitHubProjects/Projet_interaction_distribuee/' + str(id) + '.json')
-                    print(self.sensor_data)
+                    #print(self.sensor_data)
                     break
 
             while True:
-                print("carrr")  
                 data = (connection.recv(128)).decode("utf-8")  
                 #print(data)
                 if data != '':  
@@ -73,7 +72,6 @@ class AggregatorAgent(ServerTCP):
                 
                 try:  
                     value = float(value)
-                    #print('value {}'.format(value))
                 except:
                     pass
 
@@ -91,7 +89,7 @@ class AggregatorAgent(ServerTCP):
                     data_info = {"date":receive_date,"time":receive_time,"value":value,"unit":sensor_info["unit"]}
                     self.sensor_data[ident].append(data_info)
                     #print('sensor id {}'.format(sensor_info))
-                    print(self.sensor_data)
+                    #print(self.sensor_data)
                     #saveData(sensor_info['/home/moufdi/GitHubProjects/Projet_interaction_distribuee/' + str(ident) + '.json'],self.sensor_data)
                     saveData('/home/moufdi/GitHubProjects/Projet_interaction_distribuee/' + str(ident) + '.json', self.sensor_data[ident])    
                         #print(self.sensor_data) 
@@ -151,9 +149,10 @@ class AggregatorAgent(ServerTCP):
 
         def send(self,last_received_data):
             if self.isConnected() == 0 and self.isDisconnected() == False:
-                print('--------------- {}'.format(last_received_data))
+                
                 try:
                     last_received_data = json.dumps(last_received_data)
+                    print('len {}'.format(len(last_received_data)))
                     print('sending {!r} to {}'.format(last_received_data,self.port))
                     self.sock.sendall(last_received_data.encode())
                 except:
