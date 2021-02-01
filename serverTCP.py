@@ -17,20 +17,17 @@ class ServerTCP :
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind(self.server_address)
         # Listen for incoming connections
-        self.sock.listen(3)
+        self.sock.listen(5)
         # Wait for a connection
         print('waiting for a connection')
         while True:
             #connection, client_address = self.sock.accept()
             serverThread = threading.Thread(target=receiveFunc,args=self.sock.accept())
             serverThread.start()
-            #if port == 2550:
-            #    print('breaking')
-            #    break
-    
+        
     def receive(self,conn):
         #while(True):         
-        currentRunningServer = (conn.recv(32)).decode("utf-8") 
+        currentRunningServer = (conn.recv(4096)).decode("utf-8") 
         data = currentRunningServer
         return currentRunningServer
 

@@ -20,6 +20,7 @@ class AggregatorAgent(ServerTCP):
         self.sensor_data = {}
         self.connection_to_server = self.ConnectionToServer(self.aggregator_id,self.sensors_list)
         self.sendToServer_thread = None
+        self.receptionFromServer_thread = None
         self.receptionFromSensor_thread = None
     
     def receptionFromSensor(self, IP, port, receiveFunc):      
@@ -30,7 +31,7 @@ class AggregatorAgent(ServerTCP):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind(self.server_address)
         # Listen for incoming connections
-        self.sock.listen(3)
+        self.sock.listen(5)
         # Wait for a connection
         print('waiting for a connection')
         while True:
@@ -43,9 +44,10 @@ class AggregatorAgent(ServerTCP):
             print('connection from', client_address)
             #sensor_info_received = False
             while True : #not sensor_info_received
-                sensor_info = (connection.recv(128)).decode("utf-8")
+                sensor_info = (connection.recv(4096)).decode("utf-8")
                 #print(sensor_info)
-                if sensor_info != '':  
+                if sensor_info != '': 
+                    print(sensor_info) 
                     try:  
                         sensor_info = json.loads(sensor_info)
                     except:
@@ -60,7 +62,7 @@ class AggregatorAgent(ServerTCP):
                     break
 
             while True:
-                data = (connection.recv(128)).decode("utf-8")  
+                data = (connection.recv(4096)).decode("utf-8")  
                 #print(data)
                 if data != '':  
                     try:  
@@ -126,7 +128,7 @@ class AggregatorAgent(ServerTCP):
             elif request == REQUESTS_TO_SENSOR[2]:
                 print('Sending rate setting request to {}'.format(sensor_id))
                 print('Resetting {} rate'.format(sensor_id))
-                #TODO     
+                #TODO
     
     def sendDataToServer(self):
         while(True):
@@ -137,7 +139,9 @@ class AggregatorAgent(ServerTCP):
     def startTransmissionToServer(self):
         self.connection_to_server.thread_client.start()
         self.sendToServer_thread = threading.Thread(target=self.sendDataToServer)
-        self.sendToServer_thread.start() 
+        self.receptionFromServer_thread = threading.Thread(target=self.connection_to_server.receive) 
+        self.sendToServer_thread.start()
+        self.receptionFromServer_thread.start()
 
     class ConnectionToServer(TCPClient):
         SERVER_REQUESTS = ['TURN_OFF','TURN_ON','SET_RATE']
@@ -157,11 +161,8 @@ class AggregatorAgent(ServerTCP):
                     self.sock.sendall(last_received_data.encode())
                 except:
                     pass
-        def receive(self):
-            pass
-
-        def startThreads(self):
-            self.thread_client.start()
+        #def receive(self):
+        #    pass
         
     def start_timer(self,t):
         time.sleep(t)
@@ -177,7 +178,13 @@ class AggregatorAgent(ServerTCP):
         self.receptionFromSensor_thread = threading.Thread(target=self.receptionFromSensor,args=[IP, port, receiveFunc])
         self.receptionFromSensor_thread.start()
 
-agg = AggregatorAgent('agg1')
-agg.startAgregatorReception('localhost',3100,agg.receive)
-agg.startTransmissionToServer()
+#agg = AggregatorAgent('agg1')
+#agg.startAgregatorReception('localhost',3100,agg.receive)
+#
+#agg2 = AggregatorAgent('agg2')
+#agg2.startAgregatorReception('localhost',3200,agg2.receive)
+#
+#agg.startTransmissionToServer()
+#agg2.startTransmissionToServer()
+
 

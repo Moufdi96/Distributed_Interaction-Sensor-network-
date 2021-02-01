@@ -19,20 +19,23 @@ class ServerMachine(ServerTCP):
             while True:  
                 data = (connection.recv(4096)).decode("utf-8")
                 #print('data string format {}'.format(data))  
-                if data != '':  
+                if data != '':
                     try:  
                         data = json.loads(data)
                         if data.__class__ == list:
                             agregator_id, value = data[0], data[1] 
                             self.last_received_data[agregator_id] = value
                             print('agregator id {} , value {}'.format(agregator_id, value))
+                            #self.sendRequestToAgregator('Turnofffff',agregator_id)
                     except:
                         print("errrrrrrrrrrrrrrrrrror")   
         except:
             pass
 
-        def sendRequestToAgregator(self,request,agregator_id):
-            pass
+    def sendRequestToAgregator(self,request,agregator_id):
+        req = [agregator_id,request]
+        req = json.dumps(req)
+        self.sock.sendall(req.encode())
     
 server = ServerMachine()
 server.startServer('localhost',2500,server.receiveData)

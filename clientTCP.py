@@ -40,7 +40,7 @@ class TCPClient :
     def receive(self):
         while True:
             if self.isConnected() == 0 and self.isDisconnected() == False:
-                self.data = self.sock.recv(16).decode("utf-8")
+                self.data = self.sock.recv(4096).decode("utf-8")
                 if(self.data != ''):   
                     print('received {!r} from {}'.format(self.data,self.port))    
 

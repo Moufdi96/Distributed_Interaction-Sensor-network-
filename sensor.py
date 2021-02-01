@@ -10,7 +10,7 @@ import json
 REQUESTS_FROM_AGGREGATOR = ['TURN_OFF','TURN_ON','SET_RATE']
 
 class VirtualSensor(TCPClient) : 
-    def __init__(self,sensor_id,sensor_type,sensor_rate,measurement_unit,geolocalisation):
+    def __init__(self,sensor_id,sensor_type,sensor_rate,measurement_unit,geolocalisation,serverIP,serverPort):
         TCPClient.__init__(self)
         self.sensor_id = sensor_id
         self.sensor_type =sensor_type
@@ -18,7 +18,7 @@ class VirtualSensor(TCPClient) :
         self.measurement_unit = measurement_unit
         self.transmission_state = False
         self.geolocalisation = geolocalisation
-        self.thread_client1 = threading.Thread(target=self.connectToServer,args=['localhost',3100])
+        self.thread_client1 = threading.Thread(target=self.connectToServer,args=[serverIP,serverPort])
         self.thread_send1 = threading.Thread(target=self.send)
         self.thread_receive1 = threading.Thread(target=self.receive)
         
@@ -29,6 +29,7 @@ class VirtualSensor(TCPClient) :
                 
                 try:
                     self.sock.sendall(sensor_info.encode())
+                    time.sleep(1)
                     break
                 except:
                     pass
@@ -52,9 +53,8 @@ class VirtualSensor(TCPClient) :
 
     def receive(self):
         while True:
-            print("hellooooo")
             if self.isConnected() == 0 and self.isDisconnected() == False:
-                self.data = self.sock.recv(16).decode("utf-8")
+                self.data = self.sock.recv(4096).decode("utf-8")
                 print(self.data)
                 if(self.data != '' and self.data in REQUESTS_FROM_AGGREGATOR):
                     if self.data == REQUESTS_FROM_AGGREGATOR[0]:
@@ -103,9 +103,9 @@ class VirtualSensor(TCPClient) :
         data = uniform(-10000,10000)
         return data
 
-sensor1 = VirtualSensor('sensor1','Humidity',0.25,'lux','localisation')
-sensor2 = VirtualSensor('sensor2','Thermometer',0.3,'C°','localisation')
-#sensor3 = VirtualSensor('sensor3','Barometer',0.4,'bar','localisation')
-sensor1.start_threads()
-sensor2.start_threads()
+#sensor1 = VirtualSensor('sensor1','Humidity',0.25,'lux','localisation','localhost',3100)
+#sensor2 = VirtualSensor('sensor2','Thermometer',0.3,'C°','localisation','localhost',3100)
+#sensor3 = VirtualSensor('sensor3','Barometer',0.4,'bar','localisation','localhost',3200)
+#sensor1.start_threads()
 #sensor3.start_threads()
+#sensor2.start_threads()
