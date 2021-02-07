@@ -21,8 +21,9 @@ class AggregatorAgent(ServerTCP):
         self.client = TCPClient() # to communicate with the server
         self.sensor_data = {}
         self.connection_to_server = self.ConnectionToServer(self.aggregator_id,self.sensors_list,self.sensor_data)
-        self.sendToServer_thread = None
-        self.receptionFromServer_thread = None
+        #self.connection_to_server.startTransmissionToServer()
+        #self.sendToServer_thread = None
+        #self.receptionFromServer_thread = None
         self.receptionFromSensor_thread = None
     
     def receptionFromSensor(self, IP, port, receiveFunc):      
@@ -42,8 +43,9 @@ class AggregatorAgent(ServerTCP):
             receptionFromSensorThread.start()
         
     def receive(self,connection,client_address):
+        print('connection from', client_address)
+        self.connection_to_server.startTransmissionToServer()
         try:
-            print('connection from', client_address)
             #sensor_info_received = False
             while True : #not sensor_info_received
                 sensor_info = (connection.recv(4096)).decode("utf-8")
@@ -117,88 +119,100 @@ class AggregatorAgent(ServerTCP):
         #self.sonsor_threads[id] = threading.Thread(target=self.sendRequestToSensor)
 
 
-    def sendRequestToSensor(self, request, sensor_id,*args):
-        if request in REQUESTS_TO_SENSOR:
-            if request == REQUESTS_TO_SENSOR[0]:
-                print('Sending turn off request to {}'.format(sensor_id))
-                print('Turnning off {}'.format(sensor_id))
-                self.sock.sendall(request.encode())
-            elif request == REQUESTS_TO_SENSOR[1]:
-                print('Sending turn on request to {}'.format(sensor_id))
-                print('Turnning on {}'.format(sensor_id))
-                #TODO
-            elif request == REQUESTS_TO_SENSOR[2]:
-                print('Sending rate setting request to {}'.format(sensor_id))
-                print('Resetting {} rate'.format(sensor_id))
-                #TODO
+    #def sendRequestToSensor(self, request, sensor_id,*args):
+    #    if request in REQUESTS_TO_SENSOR:
+    #        if request == REQUESTS_TO_SENSOR[0]:
+    #            print('Sending turn off request to {}'.format(sensor_id))
+    #            print('Turnning off {}'.format(sensor_id))
+    #            self.sock.sendall(request.encode())
+    #        elif request == REQUESTS_TO_SENSOR[1]:
+    #            print('Sending turn on request to {}'.format(sensor_id))
+    #            print('Turnning on {}'.format(sensor_id))
+    #            #TODO
+    #        elif request == REQUESTS_TO_SENSOR[2]:
+    #            print('Sending rate setting request to {}'.format(sensor_id))
+    #            print('Resetting {} rate'.format(sensor_id))
+    #            #TODO
     
-    def sendDataToServer(self):
-        while(True):
-            last_received_data = [self.aggregator_id,self.get_last_received_data()]
-            self.connection_to_server.send(last_received_data)
-            self.start_timer(10) # send last received data to the server each minute
+    #def sendDataToServer(self):
+    #    while(True):
+    #        last_received_data = [self.aggregator_id,self.get_last_received_data()]
+    #        self.connection_to_server.send(last_received_data)
+    #        self.start_timer(5) # send last received data to the server each minute
     
-    def startTransmissionToServer(self):
-        self.connection_to_server.thread_client.start()
-        self.sendToServer_thread = threading.Thread(target=self.sendDataToServer)
-        self.receptionFromServer_thread = threading.Thread(target=self.connection_to_server.receive) 
-        self.sendToServer_thread.start()
-        self.receptionFromServer_thread.start()
+    #def startTransmissionToServer(self):
+    #    self.connection_to_server.thread_client.start()
+    #    self.sendToServer_thread = threading.Thread(target=self.sendDataToServer)
+    #    self.receptionFromServer_thread = threading.Thread(target=self.connection_to_server.receive) 
+    #    self.sendToServer_thread.start()
+    #    self.receptionFromServer_thread.start()
+    
+    def respondToServerRequest(self):
+        pass
 
     class ConnectionToServer(TCPClient):
         SERVER_REQUESTS = ['TURN_OFF','TURN_ON','SET_RATE']
-        def __init__(self,agregator_id,agreg_sensor_list,sensor_data) :
+        def __init__(self,agregator_id,agreg_sensor_list,sensor_data):
             TCPClient.__init__(self)
-            self.sensor_data = sensor_data
             self.agregator_id = agregator_id
             self.agreg_sensor_list = agreg_sensor_list
+            self.sensor_data = sensor_data
             self.thread_client = threading.Thread(target=self.connectToServer,args=['localhost',2500])
+            self.sendToServer_thread = threading.Thread(target=self.send,args=self.sensor_data)
+            self.receptionFromServer_thread = threading.Thread(target=self.receive) 
 
         def send(self,data):
             if self.isConnected() == 0 and self.isDisconnected() == False:
-                
-                try:
-                    data = json.dumps(data)
-                    #print('len {}'.format(len(data)))
-                    print('sending {!r} to {}'.format(data,self.port))
-                    self.sock.sendall(data.encode())
-                except:
-                    pass
-        def receive(self):
-            while True:
-                if self.isConnected() == 0 and self.isDisconnected() == False:
-                    receivedFromServer = self.sock.recv(4096).decode("utf-8")
-                    if(receivedFromServer != ''):
-                        try:
-                            receivedFromServer = json.loads(receivedFromServer)
-                            if (receivedFromServer.__class__ == list):
-                                agreg_id, request = receivedFromServer[0], receivedFromServer[1]
-                                if agreg_id == self.agregator_id:
-                                    self.respondToServerRequest(request)
-                        except:
-                            pass  
+                while(True):
+                    print(data)
+                    last_received_data = [self.agregator_id,self.get_last_received_data()]
+                    try:
+                        last_received_data = json.dumps(last_received_data)
+                        #print('len {}'.format(len(data)))
+                        print('sending {!r} to {}'.format(last_received_data,self.port))
+                        self.sock.sendall(last_received_data.encode())
+                        self.start_timer(5) # send last received data to the server each minute
+                    except:
+                        pass
 
-                        print('received {!r} from {}'.format(self.data,self.port))
+        def get_last_received_data(self):
+            last_received_data = {}
+            sensors = list(self.sensor_data.keys())
+            for s in sensors:
+                last_received_data[s] = self.sensor_data[s][-1]
+            return last_received_data
 
-        def respondToServerRequest(self,request):
-            if request in REQUESTS_FROM_SERVER:
-                if request == REQUESTS_FROM_SERVER[0]:
-                    request_index = 0 # this index allows the server to know to which request this response corresponds 
-                    request_response = [request_index,self.agregator_id,self.agreg_sensor_list]
-                    self.send(request_response)
-                elif request == REQUESTS_FROM_SERVER[1]:
-                    pass
-                    
+        def startTransmissionToServer(self):
+            self.thread_client.start()
+            self.sendToServer_thread.start()
+            self.receptionFromServer_thread.start()
         
-    def start_timer(self,t):
-        time.sleep(t)
+        def start_timer(self,t):
+            time.sleep(t)
+        #def receive(self):
+        #    while True:
+        #        if self.isConnected() == 0 and self.isDisconnected() == False:
+        #            receivedFromServer = self.sock.recv(4096).decode("utf-8")
+        #            if(receivedFromServer != ''):
+        #                try:
+        #                    receivedFromServer = json.loads(receivedFromServer)
+        #                    if (receivedFromServer.__class__ == list):
+        #                        agreg_id, request = receivedFromServer[0], receivedFromServer[1]
+        #                        if agreg_id == self.agregator_id:
+        #                            self.send(request)
+        #                except:
+        #                    pass
+        #                print('received {!r} from {}'.format(self.data,self.port))
+        
+    #def start_timer(self,t):
+    #    time.sleep(t)
 
-    def get_last_received_data(self):
-        last_received_data = {}
-        sensors = list(self.sensor_data.keys())
-        for s in sensors:
-            last_received_data[s] = self.sensor_data[s][-1]
-        return last_received_data
+    #def get_last_received_data(self):
+    #    last_received_data = {}
+    #    sensors = list(self.sensor_data.keys())
+    #    for s in sensors:
+    #        last_received_data[s] = self.sensor_data[s][-1]
+    #    return last_received_data
     
     def startAgregatorReception(self, IP, port, receiveFunc):
         self.receptionFromSensor_thread = threading.Thread(target=self.receptionFromSensor,args=[IP, port, receiveFunc])

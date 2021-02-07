@@ -100,7 +100,7 @@ class VirtualSensor(TCPClient) :
 
     @staticmethod
     def dataAcquisition():
-        data = uniform(-10000,10000)
+        data = round(uniform(-10000,10000),2) 
         return data
 
 #sensor1 = VirtualSensor('sensor1','Humidity',0.25,'lux','localisation','localhost',3100)
