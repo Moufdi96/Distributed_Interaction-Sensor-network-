@@ -3,7 +3,7 @@ import threading
 from serverMachine import ServerMachine
 import json 
 
-global agreg_list_length, frames
+global agreg_list_length, frames, checked
 frames = []
 
 agreg_list_length = 0
@@ -33,20 +33,25 @@ class GUI:
         self.root_frame.pack(fill='both', expand='yes')
         welcome_label = Label(self.root_frame,text='Welcome to SensorEveryWhere\n please choose an agregator')
         welcome_label.pack()
-        self.agreg_frame = LabelFrame(self.root_frame,text='Loading agregators .....',padx=5,pady=5,borderwidth=5) 
+        self.agreg_frame = LabelFrame(self.root_frame,text='Waiting agregators to connect .....',padx=5,pady=5,borderwidth=5) 
         self.agreg_frame.place(in_=self.root_frame, rely=0.0, y=50,relwidth=1,height=70)
         scrolaball_frame = Scrollbar(self.agreg_frame,orient='horizontal')
         scrolaball_frame.pack(side = BOTTOM, fill = X)
-        self.sensors_frame = LabelFrame(self.root_frame,text=checked,padx=5,pady=5,borderwidth=5)
+        self.sensors_frame = LabelFrame(self.root_frame,padx=5,pady=5,borderwidth=5)
         self.sensors_frame.place(in_=self.agreg_frame, rely=1.0, y=50, relwidth=1, height=300)
-        
+        self.request_frame = LabelFrame(self.sensors_frame,text='Send request to agregator',padx=5,pady=5,borderwidth=5)
+        get_instant_data = Button(self.request_frame,text='GetInstantData',padx=5,command=lambda: self.resquest_callback(ServerMachine.REQUESTS_TO_AGREGATOR[1]))
+        get_instant_data.place(in_=self.request_frame, relx=0.0, x=30, width=100)
+        get_agreg_config = Button(self.request_frame,text='Configuration',padx=5)
+        get_agreg_config.place(in_=get_instant_data, relx=1.0, x=30, relwidth=1, relheight=1)
+    
         threading.Thread(target=self.create_radio_buttons).start()
         #self.create_radio_buttons()
     
     def create_radio_buttons(self):
         global agreg_list_length
         global checked
-
+        self.agreg_frame['text'] = 'Connected Agregators'
         while True:
             if agreg_list_length == len(self.serverMachine.agregator_list) - 1:   
                 #checked.set(str(self.agregator[0]))
@@ -59,28 +64,28 @@ class GUI:
                     radioButton = Radiobutton(self.agreg_frame,text=str(self.serverMachine.agregator_list[-1]),variable=checked,value=str(self.serverMachine.agregator_list[-1]),command=self.radioBtnCallback)
                     radioButton.place(in_=temp, relx=1.0, x=5, rely=0)
                     temp = radioButton
-                
+        
                 agreg_list_length += 1 
     
     def radioBtnCallback(self):
         global frames
-        sensor_data = {}
-        #labels = {}   
         global checked
+        sensor_data = {}
+        self.labels = {}  
+        update_thread = threading.Thread() 
         checked_local = StringVar()
         checked_local.set(checked.get())
-        #print('checked {}'.format(checked.get()))
-        #print('checked_local {}'.format(checked_local.get())) 
+        self.sensors_frame['text'] = checked_local.get()  
         sensor_data = self.serverMachine.get_last_data(checked.get())
-
-        if len(frames) != 0:
+        self.request_frame.place(in_=self.sensors_frame, rely=0.0, y=10,relwidth=1,height=70)
+        if len(frames) != 0:    
             for f in frames:
                 f.destroy() 
         frames.clear()
         print('-----------------------------')
-        temp = self.sensors_frame
+        temp = self.request_frame
         y = 10
-        rely = 0.0
+        rely = 1.0
         for sensor in sensor_data.keys():
             print(sensor)
             frames.append(LabelFrame(self.sensors_frame,text=str(sensor),padx=5,pady=5,borderwidth=3))
@@ -89,40 +94,52 @@ class GUI:
             rely = 1.0
             temp = frames[-1]
         i = 0
-        sensor_name = Label(frames[0],text="Moufdi")
-        #sensor_name.place(relx=1.0, relwidth=1, relheight=1)
         for sensor, data in list(sensor_data.items()):    
+            sensor_name = Label(frames[i],text=str(sensor))
             sensor_value = Label(frames[i],text=str(data['value']))
             unit = Label(frames[i],text=str(data['unit']))
             date = Label(frames[i],text=str(data['date']))
             time = Label(frames[i],text=str(data['time']))
             
-            print(data['value'])
-            sensor_name = Label(frames[i],text=str(sensor))
-            sensor_name.place(in_=frames[i], relx=0.0, x=10, width=70, relheight=1)
-            sensor_value.place(in_=sensor_name, relx=1.0, x=10, width=70, relheight=1)
-            unit.place(in_=sensor_value, relx=1.0, x=10, width=70, relheight=1)
-            date.place(in_=unit, relx=1.0, x=10, width=70, relheight=1)
-            time.place(in_=date, relx=1.0, x=10, width=70, relheight=1)
+            sensor_name.place(in_=frames[i], relx=0.0, x=30, width=80, relheight=1)
+            sensor_value.place(in_=sensor_name, relx=1.0, x=40, width=80, relheight=1)
+            unit.place(in_=sensor_value, relx=1.0, x=40, width=80, relheight=1)
+            time.place(in_=date, relx=1.0, x=40, width=80, relheight=1)
+            date.place(in_=unit, relx=1.0, x=40, width=80, relheight=1)
             i += 1
+            self.labels[sensor]={'unit':unit, 'sensor_value':sensor_value, 'date':date, 'time':time}
 
-        #def update_thread():    
-        #    while(True):
-        #        if checked.get() != checked_local.get():
-        #            print('checked_local {}'.format(checked_local.get()))
-        #            
-        #            for s in list(labels.keys()):
-        #                labels[s][0].destroy()
-        #                labels[s][1].destroy()
-        #                labels.clear() 
-        #            break
-#
-        #        sensor_data = self.serverMachine.get_last_data(checked.get())
-        #        print(sensor_data)
-        #        print(labels.keys())
-        #        for s in list(labels.keys()) :
-        #            labels[s][1]['text'] = str(sensor_data[s])
-#
-        #threading.Thread(target=update_thread).start()
+        def update_data():    
+            while(True):
+                if checked_local.get() != checked.get():
+                    break
+                sensor_data = self.serverMachine.get_last_data(checked.get())
+                for sensor, data in list(sensor_data.items()):
+                    self.labels[sensor]['sensor_value']['text'] = data['value']
+                    self.labels[sensor]['unit']['text'] = data['unit']
+                    self.labels[sensor]['time']['text'] = data['time']
+                    self.labels[sensor]['date']['text'] = data['date'] 
+
+        update_thread = threading.Thread(target=update_data)
+        update_thread.start()
+    
+    def resquest_callback(self,request):
+        global checked
+        #if self.serverMachine.request_result['agregator_id'] == :
+        self.serverMachine.sendRequestToAgregator(request,checked.get())
+        while True:
+            if len(self.serverMachine.request_result.keys()) != 0:
+                print(self.serverMachine.request_result.keys())
+                if self.serverMachine.request_result['request_index'] == 0:
+                    pass
+                elif self.serverMachine.request_result['request_index'] == 1:
+                    last_received_data = self.serverMachine.request_result['request_result']
+                    for sensor, data in list(last_received_data.items()):
+                        self.labels[sensor]['sensor_value']['text'] = data['value']
+                        self.labels[sensor]['unit']['text'] = data['unit']
+                        self.labels[sensor]['time']['text'] = data['time']
+                        self.labels[sensor]['date']['text'] = data['date'] 
+                self.serverMachine.request_result = {}
+                break 
 
 g = GUI()

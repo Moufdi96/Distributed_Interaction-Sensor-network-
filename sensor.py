@@ -10,10 +10,10 @@ import json
 REQUESTS_FROM_AGGREGATOR = ['TURN_OFF','TURN_ON','SET_RATE']
 
 class VirtualSensor(TCPClient) : 
-    def __init__(self,sensor_id,sensor_type,sensor_rate,measurement_unit,geolocalisation,serverIP,serverPort):
+    def __init__(self,sensor_id,data_type,sensor_rate,measurement_unit,geolocalisation,serverIP,serverPort):
         TCPClient.__init__(self)
         self.sensor_id = sensor_id
-        self.sensor_type =sensor_type
+        self.data_type =data_type
         self.sensor_rate = sensor_rate # rate (Hz)
         self.measurement_unit = measurement_unit
         self.transmission_state = False
@@ -23,7 +23,7 @@ class VirtualSensor(TCPClient) :
         self.thread_receive1 = threading.Thread(target=self.receive)
         
     def send(self):
-        sensor_info = json.dumps({'id':self.sensor_id,'type':self.sensor_type,'rate':self.sensor_rate,'unit':self.measurement_unit,'geolocalisation':self.geolocalisation})
+        sensor_info = json.dumps({'id':self.sensor_id,'type':self.data_type,'rate':self.sensor_rate,'unit':self.measurement_unit,'geolocalisation':self.geolocalisation})
         while True:
             if self.isConnected() == 0 and self.isDisconnected() == False:
                 
@@ -37,7 +37,7 @@ class VirtualSensor(TCPClient) :
                 continue
 
         while True :
-            self.data =''
+            self.data = ''
             if self.isConnected() == 0 and self.isDisconnected() == False:
                 try:
                 # Send data

@@ -49,7 +49,7 @@ class AggregatorAgent(ServerTCP):
                 sensor_info = (connection.recv(4096)).decode("utf-8")
                 #print(sensor_info)
                 if sensor_info != '': 
-                    print(sensor_info) 
+                    #print(sensor_info) 
                     try:  
                         sensor_info = json.loads(sensor_info)
                     except:
@@ -173,21 +173,31 @@ class AggregatorAgent(ServerTCP):
                             receivedFromServer = json.loads(receivedFromServer)
                             if (receivedFromServer.__class__ == list):
                                 agreg_id, request = receivedFromServer[0], receivedFromServer[1]
+                                print(agreg_id, request)
                                 if agreg_id == self.agregator_id:
                                     self.respondToServerRequest(request)
                         except:
                             pass  
 
-                        print('received {!r} from {}'.format(self.data,self.port))
+                        #print('received {!r} from {}'.format(self.data,self.port))
+        
+        def get_last_received_data(self):
+            last_received_data = {}
+            sensors = list(self.sensor_data.keys())
+            for s in sensors:
+                last_received_data[s] = self.sensor_data[s][-1]
+            return last_received_data
 
         def respondToServerRequest(self,request):
             if request in REQUESTS_FROM_SERVER:
                 if request == REQUESTS_FROM_SERVER[0]:
                     request_index = 0 # this index allows the server to know to which request this response corresponds 
-                    request_response = [request_index,self.agregator_id,self.agreg_sensor_list]
+                    request_response = {'request_index':request_index,'agregator_id':self.agregator_id,'request_result':self.agreg_sensor_list}
                     self.send(request_response)
                 elif request == REQUESTS_FROM_SERVER[1]:
-                    pass
+                    request_index = 1 # this index allows the server to know to which request this response corresponds 
+                    request_response = {'request_index':request_index,'agregator_id':self.agregator_id,'request_result':self.get_last_received_data()}
+                    self.send(request_response)
                     
         
     def start_timer(self,t):
@@ -203,14 +213,3 @@ class AggregatorAgent(ServerTCP):
     def startAgregatorReception(self, IP, port, receiveFunc):
         self.receptionFromSensor_thread = threading.Thread(target=self.receptionFromSensor,args=[IP, port, receiveFunc])
         self.receptionFromSensor_thread.start()
-
-#agg = AggregatorAgent('agg1')
-#agg.startAgregatorReception('localhost',3100,agg.receive)
-#
-#agg2 = AggregatorAgent('agg2')
-#agg2.startAgregatorReception('localhost',3200,agg2.receive)
-#
-#agg.startTransmissionToServer()
-#agg2.startTransmissionToServer()
-
-
