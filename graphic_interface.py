@@ -36,9 +36,9 @@ class GUI:
         self.root.title('SensorsEveryWhere Interface')
         self.root_frame = LabelFrame(self.root,bg='black',fg='white',padx=7,pady=7)
         self.root_frame.pack(fill='both', expand='yes')
-        welcome_label = Label(self.root_frame,text='Welcome to SensorEveryWhere\n please choose an agregator',bg='black',fg='white',font=self.welcome_font)
+        welcome_label = Label(self.root_frame,text='Welcome to SensorsEveryWhere\n Please select an agregator',bg='black',fg='white',font=self.welcome_font)
         welcome_label.pack()
-        self.agreg_frame = LabelFrame(self.root_frame,text='Waiting agregators to connect .....',padx=10,pady=10,borderwidth=5,bg='black',fg='white',font=self.title_font) 
+        self.agreg_frame = LabelFrame(self.root_frame,text='Loading agregators .....',padx=10,pady=10,borderwidth=5,bg='black',fg='white',font=self.title_font) 
         self.agreg_frame.place(in_=self.root_frame, rely=0.0, y=50,relwidth=1,height=100)
         scrolaball_frame = Scrollbar(self.agreg_frame,orient='horizontal',bg='black')
         scrolaball_frame.pack(side = BOTTOM, fill = X)
@@ -69,7 +69,7 @@ class GUI:
     def create_radio_buttons(self):
         global agreg_list_length
         global checked
-        self.agreg_frame['text'] = 'Connected Agregators'
+        
         while True:
             if agreg_list_length == len(self.serverMachine.agregator_list) - 1:   
                 #checked.set(str(self.agregator[0]))
@@ -78,6 +78,7 @@ class GUI:
                     radioButton = Radiobutton(self.agreg_frame,text=str(self.serverMachine.agregator_list[-1]),variable=checked,bg='black',fg='white',value=str(self.serverMachine.agregator_list[-1]),command=self.radioBtnCallback,font=self.normal_font)
                     temp = radioButton
                     radioButton.place(in_=self.agreg_frame)
+                    self.agreg_frame['text'] = 'Connected Agregators'
                 elif agreg_list_length > 0: 
                     radioButton = Radiobutton(self.agreg_frame,text=str(self.serverMachine.agregator_list[-1]),variable=checked,bg='black',fg='white',value=str(self.serverMachine.agregator_list[-1]),command=self.radioBtnCallback,font=self.normal_font)
                     radioButton.place(in_=temp, relx=1.0, x=15)
@@ -111,7 +112,7 @@ class GUI:
             rely = 1.0
             temp = frames[-1]
         i = 0
-        for sensor, data in list(sensor_data.items()):    
+        for sensor, data in list(sensor_data.items()):  
             sensor_name = Label(frames[i],text=str(sensor),bg='black',fg='white')
             sensor_value = Label(frames[i],text=str(data['value']),bg='black',fg='white')
             unit = Label(frames[i],text=str(data['unit']),bg='black',fg='white')
@@ -165,9 +166,9 @@ class GUI:
                     agreg_configuration = self.serverMachine.request_result['request_result']
                     temp = LabelFrame(myFrame,padx=5,pady=5,height=70,width=500,borderwidth=3,bg='black',fg='white')
                     temp.pack()#place(in_=myFrame, rely=0.0, y=5, relwidth=0.9,height=80)
-                    agreg_lable = Label(temp,text='Agregator : ' + str(checked.get()),bg='black',fg='white')
+                    agreg_lable = Label(temp,text='Agregator : ' + str(checked.get()),bg='black',fg='white',font=self.title_font)
                     agreg_lable.place(in_=temp,relx=0.0,x=70,relheight=1)
-                    num_sensor = Label(temp,text='Sensor number : ' + str(len(agreg_configuration.keys())),bg='black',fg='white')
+                    num_sensor = Label(temp,text='Sensor number : ' + str(len(agreg_configuration.keys())),bg='black',fg='white',font=self.title_font)
                     num_sensor.place(in_=agreg_lable,relx=1.0,x=30,relheight=1)
                     y = 10
                     rely = 0.0
@@ -203,5 +204,7 @@ class GUI:
                         self.labels[sensor]['date']['text'] = data['date'] 
                 self.serverMachine.request_result = {}
                 break 
+    
 
-g = GUI()
+if __name__ == '__main__':
+    GUI()

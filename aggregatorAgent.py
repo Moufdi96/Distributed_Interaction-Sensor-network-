@@ -6,9 +6,10 @@ import socket
 import threading
 import json
 import time
+import os
 from stableMemory import loadJsonFile, saveData
 
-REQUESTS_TO_SENSOR = ['TURN_OFF','TURN_ON','SET_RATE']
+#REQUESTS_TO_SENSOR = ['TURN_OFF','TURN_ON','SET_RATE']
 REQUESTS_FROM_SERVER = ['GET_AGREGATOR_CONFIGURATION','GET_LAST_DATA']
 
 
@@ -16,7 +17,9 @@ class AggregatorAgent(ServerTCP):
     def __init__(self,id):
         ServerTCP.__init__(self)
         self.aggregator_id = id
-        self.path_sensor_metaData = '/home/moufdi/GitHubProjects/Projet_interaction_distribuee/' + str(id) + '.json'
+        self.database_folder = self.aggregator_id + '_database'
+        os.system('mkdir ' + self.database_folder)
+        self.path_sensor_metaData = './' + str(id) + '.json'
         self.sensors_list = loadJsonFile(self.path_sensor_metaData)
         self.client = TCPClient() # to communicate with the server
         self.sensor_data = {}
@@ -72,7 +75,7 @@ class AggregatorAgent(ServerTCP):
                     #print(sensor_info)
                     id = sensor_info['id']
                     sensor_info = self.add_new_sensor(sensor_info)
-                    self.sensor_data[id] = loadJsonFile('/home/moufdi/GitHubProjects/Projet_interaction_distribuee/' + str(id) + '.json')
+                    self.sensor_data[id] = loadJsonFile('./' + str(id) + '.json')
                     #print(self.sensor_data)
                     break
 
@@ -109,7 +112,7 @@ class AggregatorAgent(ServerTCP):
                     #print('sensor id {}'.format(sensor_info))
                     #print(self.sensor_data)
                     #saveData(sensor_info['/home/moufdi/GitHubProjects/Projet_interaction_distribuee/' + str(ident) + '.json'],self.sensor_data)
-                    saveData('/home/moufdi/GitHubProjects/Projet_interaction_distribuee/' + str(ident) + '.json', self.sensor_data[ident])    
+                    saveData('./' + self.database_folder +'/'+ str(ident) + '.json', self.sensor_data[ident])    
                         #print(self.sensor_data) 
                     print('----------------------------------------------------------------------')
                     print('\n')     
@@ -120,7 +123,7 @@ class AggregatorAgent(ServerTCP):
         print('\n')
         print('------------------------ Sensor info-----------------------')
         print('Sensor info {}'.format(sensor_info))
-        sensor_info['json_file_path'] = '/home/moufdi/GitHubProjects/Projet_interaction_distribuee/' + str(sensor_info['id'])  +'.json'
+        sensor_info['json_file_path'] = './' + self.database_folder +'/'+ str(sensor_info['id'])  +'.json'
         id = sensor_info.pop('id') 
         #print(id)
         self.sensors_list[id] = sensor_info
