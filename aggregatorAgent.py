@@ -25,6 +25,19 @@ class AggregatorAgent(ServerTCP):
         self.receptionFromServer_thread = None
         self.receptionFromSensor_thread = None
     
+    def connectToServer(self,IP,port):
+        # Connect the socket to the port where the server is listening
+        print('connecting to {} port {}'.format(IP,port))
+        while(True):
+            server_address = (IP, port)
+            self.port = port
+            self._opened = self.sock.connect_ex(server_address)
+            if (self._opened == 0):
+                print('connecting to {} port {} has been successful'.format(IP,port))
+                self.send
+                break
+               
+    
     def receptionFromSensor(self, IP, port, receiveFunc):      
         # Bind the socket to the port
         #os.system('fuser -k '+ str(port)+'/tcp')
@@ -33,7 +46,7 @@ class AggregatorAgent(ServerTCP):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind(self.server_address)
         # Listen for incoming connections
-        self.sock.listen(5)
+        self.sock.listen(10)
         # Wait for a connection
         print('waiting for a connection')
         while True:
@@ -81,6 +94,7 @@ class AggregatorAgent(ServerTCP):
 
                 #print(type(data))
                 if(value.__class__ == float or value.__class__ == int):
+                    print(value)
                     #self.sendRequestToSensor(REQUESTS_TO_SENSOR[0],id)
                     print('\n')
                     print('------------------------Received from Sensor-----------------------')
@@ -136,7 +150,7 @@ class AggregatorAgent(ServerTCP):
         while(True):
             last_received_data = [self.aggregator_id,self.get_last_received_data()]
             self.connection_to_server.send(last_received_data)
-            self.start_timer(10) # send last received data to the server each minute
+            self.start_timer(20) # send last received data to the server each minute
     
     def startTransmissionToServer(self):
         self.connection_to_server.thread_client.start()

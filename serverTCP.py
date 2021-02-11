@@ -17,7 +17,7 @@ class ServerTCP :
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind(self.server_address)
         # Listen for incoming connections
-        self.sock.listen(5)
+        self.sock.listen(10)
         # Wait for a connection
         print('waiting for a connection')
         while True:

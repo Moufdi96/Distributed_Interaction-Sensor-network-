@@ -41,14 +41,14 @@ class VirtualSensor(TCPClient) :
             if self.isConnected() == 0 and self.isDisconnected() == False:
                 try:
                 # Send data
-                    value = str(VirtualSensor.dataAcquisition())
+                    value = str(self.dataAcquisition())
                     data = [self.sensor_id,value]
                     data = json.dumps(data)
                     print('sending {!r} to {}'.format(data,self.port))
                     self.sock.sendall(data.encode())
                     
-                except:
-                    pass
+                except Exception as e:
+                    print(e)
             self.start_timer()
 
     def receive(self):
@@ -98,14 +98,12 @@ class VirtualSensor(TCPClient) :
         self.thread_send1.start()
         #self.thread_receive1.start()
 
-    @staticmethod
-    def dataAcquisition():
-        data = round(uniform(-10000,10000),2) 
+    def dataAcquisition(self):
+        print(self.data_type)
+        if self.data_type == 'Humidity':
+            data = round(uniform(80,86),2) 
+        elif self.data_type == 'Heat':
+            data = round(uniform(10,13),2)
+        elif self.data_type == 'Air pressure':
+            data = round(uniform(1015,1020),2)
         return data
-
-#sensor1 = VirtualSensor('sensor1','Humidity',0.25,'lux','localisation','localhost',3100)
-#sensor2 = VirtualSensor('sensor2','Thermometer',0.3,'C°','localisation','localhost',3100)
-#sensor3 = VirtualSensor('sensor3','Barometer',0.4,'bar','localisation','localhost',3200)
-#sensor1.start_threads()
-#sensor3.start_threads()
-#sensor2.start_threads()
