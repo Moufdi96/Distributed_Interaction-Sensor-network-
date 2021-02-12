@@ -18,7 +18,8 @@ To create a new sensor go to file "launch_sensors.py", instantiate a new Virtual
 
 the call the 'start_threads' function to launch sensor data acquisition. 
 
-To create a new agregator go to file "launch_agregators.py", instantiate a new AgregatorAgent object with the agregator id as paramter
+To create a new agregator create a new python file, include this code line "from aggregatorAgent import AgregatorAgent" then instantiate a new AgregatorAgent object with the agregator id as paramter
+
 to start data reception from sensors call startAgregatorReception function with :
 
 - 1st param : IP adresse of the agregator
