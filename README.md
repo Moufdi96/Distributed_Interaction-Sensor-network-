@@ -29,7 +29,7 @@ to start data reception from sensors call startAgregatorReception function with 
 to start data transmission from agregator to server call 'startTransmissionToServer' function.
 
 To change transmission rate from agregator to server go to file "AgregatorAgent.py" line 156 
-in "self.start_timer" function change the delay parameter (in seconds) to the suitable one.
+in "self.start_timer" function change the delay parameter (in seconds) to the suitable one (default rate = 20s).
 
 Please check this Demo video https://drive.google.com/file/d/1I9h3oe62-oM6nfd9Ux5tS1PjYFd35qN-/view?usp=sharing
 
