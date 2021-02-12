@@ -13,7 +13,7 @@ from stableMemory import loadJsonFile, saveData
 REQUESTS_FROM_SERVER = ['GET_AGREGATOR_CONFIGURATION','GET_LAST_DATA']
 
 
-class AggregatorAgent(ServerTCP):
+class AgregatorAgent(ServerTCP):
     def __init__(self,id):
         ServerTCP.__init__(self)
         self.aggregator_id = id

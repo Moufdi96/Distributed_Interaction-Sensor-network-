@@ -1,5 +1,5 @@
-from aggregatorAgent import AggregatorAgent
+from agregatorAgent import AgregatorAgent
 
-agg2 = AggregatorAgent('agg2')
+agg2 = AgregatorAgent('agg2')
 agg2.startAgregatorReception('localhost',3200,agg2.receive)
 agg2.startTransmissionToServer()

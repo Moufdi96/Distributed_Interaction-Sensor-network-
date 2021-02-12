@@ -149,7 +149,7 @@ class GUI:
             if len(self.serverMachine.request_result.keys()) != 0:
                 print(self.serverMachine.request_result.keys())
                 if self.serverMachine.request_result['request_index'] == 0:
-                    config_window = Toplevel(width=600,height=500,bg='black')
+                    config_window = Toplevel(width=700,height=600,bg='black')
                     config_window.title('Agregator configuration')
                     wrapper = LabelFrame(config_window,bg='black')
                     wrapper.pack(fill="both",expand=1)
@@ -159,7 +159,7 @@ class GUI:
                     scrollbar.pack(side = RIGHT, fill = "y")
                     myCanvas.configure(yscrollcommand=scrollbar.set)
                     myCanvas.bind('<Configure>',lambda e: myCanvas.configure(scrollregion=myCanvas.bbox('all')))
-                    myFrame = Frame(myCanvas,bg='black')
+                    myFrame = Frame(myCanvas,bg='black',width=700,height=600)
                     myCanvas.create_window((0,0),window=myFrame, anchor='nw')
                     
 
