@@ -1,6 +1,6 @@
 # Distributed interaction system : Sensor network
 
-The aim of this project is to implement and simulated a distributed interaction system. the system is constituted of a sensor network connected to agregators which in turn connect to a final server.   
+The aim of this project is to implement and simulate a distributed interaction system. the system is constituted of a sensor network connected to agregators which in turn connect to a final server.   
 
 Each agregator receives data from a set of sensors (software simulated sensors) situated approximately in the same geolocalization.
 All data transmisions are done via TCP/IP protocol using client/server architecture, messages are parsed into json strings before they are sent to agregators. 
