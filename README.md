@@ -5,7 +5,7 @@ The aim of this project is to implement and simulate a distributed interaction s
 Each agregator receives data from a set of sensors (software simulated sensors) situated approximately in the same geolocalization.
 All data transmisions are done via TCP/IP protocol using client/server architecture, messages are parsed into json strings before they are sent to agregators. 
 
-Agregators send data updates to the server so that they are be displayed in the graphic interface.
+Agregators send data updates to the server so that they are displayed in the graphic interface.
 
 To create a new sensor go to file "launch_sensors.py", instantiate a new VirtualSensor object with :
 - 1st param = sensor name (ex: barometer, thermometer...)
